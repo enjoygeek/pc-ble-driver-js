@@ -41,10 +41,12 @@
 
 const ControlPointOpcode = require('../dfuConstants').ControlPointOpcode;
 const ResultCode = require('../dfuConstants').ResultCode;
+const ExtendedErrorCode = require('../dfuConstants').ExtendedErrorCode;
 const ErrorCode = require('../dfuConstants').ErrorCode;
 const createError = require('../dfuConstants').createError;
 const getOpCodeName = require('../dfuConstants').getOpCodeName;
 const getResultCodeName = require('../dfuConstants').getResultCodeName;
+const getExtendedErrorCodeName = require('../dfuConstants').getExtendedErrorCodeName;
 
 /**
  * Listens to notifications for the given control point characteristic,
@@ -53,6 +55,13 @@ const getResultCodeName = require('../dfuConstants').getResultCodeName;
  */
 class NotificationQueue {
 
+    /**
+     * Creates a NotificationQueue
+     *
+     * @constructor
+     * @param adapter the adapter
+     * @param controlPointCharacteristicId the characteristic to operate on
+     */
     constructor(adapter, controlPointCharacteristicId) {
         this._adapter = adapter;
         this._controlPointCharacteristicId = controlPointCharacteristicId;
@@ -138,10 +147,12 @@ class NotificationQueue {
                 if (value[2] === ResultCode.SUCCESS) {
                     return value;
                 } else {
+                    let extendedErrorString = (value[2] === ResultCode.EXTENDED_ERROR) ? ` Extended error code ${value[3]} (${getExtendedErrorCodeName(value[3])})` : ``;
                     const error = createError(ErrorCode.COMMAND_ERROR,
                         `Operation code ${opCode} (${getOpCodeName(opCode)}) ` +
                         `failed on DFU Target. ` +
-                        `Result code ${value[2]} (${getResultCodeName(value[2])})`);
+                        `Result code ${value[2]} (${getResultCodeName(value[2])})` +
+                        extendedErrorString);
                     error.commandErrorCode = value[2];
                     throw error;
                 }
